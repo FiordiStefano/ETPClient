@@ -180,6 +180,9 @@ public class ETPClient extends JFrame {
                                 }
                             } catch (IOException ex) {
                                 JOptionPane.showMessageDialog(fileChooser, "Errore di comunicazione");
+                                progressBar.setValue(0);
+                                progressBar.setString("0%");
+                                progressBar.setVisible(false);
                                 return;
                             }
                         }
