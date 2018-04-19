@@ -5,7 +5,6 @@
  */
 package ETPClient;
 
-import com.google.protobuf.InvalidProtocolBufferException;
 import java.awt.BorderLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -14,21 +13,12 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.security.NoSuchAlgorithmException;
-import javax.json.Json;
-import javax.json.JsonException;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.JsonWriter;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
-import packet.protoPacket.dataPacket;
-import packet.protoPacket.info;
 import packet.protoPacket.resp;
 
 /**
@@ -118,51 +108,34 @@ public class ETPClient extends JFrame {
                 try {
                     // Inizializzazione della socket
                     socket = new Socket("127.0.0.1", 4000);
-                    // Inizializzazione della stream dalla socket
-                    //out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-                    //in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(fileChooser, "Impossibile connettersi al server");
                     return;
                 }
 
                 try {
-                    // Creazione delle stream di JSON per leggere e scrivere nella stream della socket
-                    //JsonWriter writer = Json.createWriter(out);
-                    //JsonReader reader = Json.createReader(in);
-
                     File FileToSend = fileChooser.getSelectedFile();
                     try {
                         fhc = new FileHandlerClient(FileToSend);
                         // invio del pacchetto informazioni
                         fhc.getProtoInfoPacket().writeDelimitedTo(socket.getOutputStream());
-                        //writer.writeObject(fhc.getInfoPacket());
-                        //out.flush();
                     } catch (IOException | NoSuchAlgorithmException ex) {
                         JOptionPane.showMessageDialog(fileChooser, "File non valido");
                         return;
                     }
                     // lettura del pacchetto di risposta
                     resp ProtoInfoRespPacket = resp.parseDelimitedFrom(socket.getInputStream());
-                    //JsonObject JsonInfoRespPacket = reader.readObject();
-                    //System.out.println(JsonInfoRespPacket.toString());
 
                     if (ProtoInfoRespPacket.getResp().equals("ok")) {
                         progressBar.setVisible(true);
                         OUTER:
                         for (int i = ProtoInfoRespPacket.getIndex(); i < fhc.nPackets; i++) {
                             try {
-                                //writer = Json.createWriter(out);
                                 // invio del pacchetto dati
                                 fhc.buildProtoPacket(i).writeDelimitedTo(socket.getOutputStream());
-                                //writer.writeObject(fhc.buildPacket(i));
-                                //System.out.println("Invio pacchetto " + i + "...");
-                                //out.flush();
 
-                                //reader = Json.createReader(in);
                                 // lettura del pacchetto di risposta
                                 resp ProtoRespPacket = resp.parseDelimitedFrom(socket.getInputStream());
-                                //JsonObject JsonRespPacket = reader.readObject();
                                 switch (ProtoRespPacket.getResp()) {
                                     case "wp":
                                         i = ProtoRespPacket.getIndex() - 1;
@@ -198,9 +171,6 @@ public class ETPClient extends JFrame {
                     } else {
                         JOptionPane.showMessageDialog(fileChooser, "Il file esiste gia'");
                     }
-                    // chiusura delle stream di Json
-                    //writer.close();
-                    //reader.close();
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(fileChooser, "Errore di connessione");
                     progressBar.setValue(0);
